@@ -1,0 +1,421 @@
+{%load static%}
+<script>
+    var user_id = {{request.user.id}};
+    var lessonid = {{info.lessonid}};
+    $(document).ready(function(){
+        /* 基本資料區 */
+        var row_search_value = window.location.search.substring(1);
+
+        /*新增作業表單展開*/
+        $("#newhomework").click(function(evevt){
+            if($("#newhomework_form").css("display")=="none"){
+                $("#newhomework_form").show("slow");
+            }
+            else{
+                $("#newhomework_form").hide("slow");
+            }
+        ;})
+
+        /*附檔上傳展開*/
+        $("#attach_true,#attach_false").click(function(event){
+            if($("#fileupload").css("display")=="none" && $("#attach_true").prop("checked")){
+                $("#fileupload").show("slow");
+            }
+            else{
+                $("#fileupload").hide("slow");
+            }
+        ;})
+
+        /*新增作業送出*/
+        $("#build").click(function(event){
+            /*抓取表單*/
+            var form = $("#newhomework_form")[0];
+            var formdata = new FormData(form);
+
+            /*邏輯前端檢查*/
+            /*資料留空*/
+            if(document.getElementById("name").value==""){
+                alert("名稱不可留空");
+                return false;
+            }
+            if(document.getElementById("start_date").value=="" || document.getElementById("finish_date").value==""){
+                alert("時間不可留空");
+                return false;
+            }
+
+            /*截止日不可早於繳交日*/
+            var start_date = new Date(document.getElementById("start_date").value);
+            var finish_date = new Date(document.getElementById("finish_date").value);
+
+            if(start_date>finish_date){
+                alert("截止日不可早於繳交日");
+                return false;
+            ;}
+
+            $.ajax({
+                url:"ajax_active/homework_active",
+                type: "POST",
+                data: formdata,
+                contentType: false,
+                cache: false,
+                processData: false,
+                success : function(data)
+                {
+                    alert(data["msg"]);
+                    /*收起建立清單*/
+                    $("#newhomework_form").hide("slow");
+                    /*整理清單*/
+                    setTimeout(function(){$("#form_area").load("ajax_show/lesson_edit_page?page=homework&" + row_search_value);},700);
+                },
+                error: function(data)
+                {
+                    alert(data["msg"]);
+                }
+            })
+
+        ;})
+
+        /*修改作業展開*/
+        $(".edit-btn").click(function(event){
+            var hw_info = "#hw_edit_" + event.target.value;
+            if($(hw_info).css("display") == "none"){
+                $(hw_info).show("slow");
+            }
+            else{
+                $(hw_info).hide("slow");
+            }
+        ;})
+
+        /*修改作業附檔欄位操作*/
+        $(".with_attach, .no_attach").click(function(event){
+            var upload_input_name = "#fileupload_" + event.target.dataset.hwid;
+            var attach_radio = "#attach_true_" + event.target.dataset.hwid;
+            if($(upload_input_name).css("display")=="none" && $(attach_radio).prop("checked")){
+                $(upload_input_name).show("slow");
+            }
+            else{
+                $(upload_input_name).hide("slow");
+            }
+        ;})
+
+        /*追加或抽換資訊顯示*/
+        $(":file").on("change", function(even){
+            /*預備抽取資料*/
+            var inner_id = even.target.dataset.innerId;
+            if (even.target.files.length > 0){
+                var filename = even.target.files[0].name;
+                document.getElementById("attach_TorF_"+inner_id).value = "True";
+            }
+            else{
+                var filename = "(無)";
+            }
+            /*更改提示與attach數值*/
+            document.getElementById("preupload_filename_"+inner_id).innerHTML = filename;
+
+        ;})
+        /*移除附件*/
+        $(".remove_attach").click(function(even){
+            console.log(even);
+            var inner_id = even.target.dataset.innerId;
+            document.getElementById("attach_TorF_"+inner_id).value = "False";
+            document.getElementById("preupload_filename_"+inner_id).innerHTML = "您預備移除附檔";
+            document.getElementById("preupload_filename_"+inner_id).color = "red";
+        ;})
+
+        /*修改作業送出*/
+        $(".edit_send").click(function(event){
+            /*抓取表單*/
+            var form = $("#"+event.target.form.id)[0];
+            var formdata = new FormData(form);
+            var hw_id = event.target.value;
+
+            /*邏輯前端檢查*/
+            /*資料留空*/
+            if(document.getElementById("name_" + hw_id).value==""){
+                alert("名稱不可留空");
+                return false;
+            }
+            if(document.getElementById("start_date_" + hw_id).value=="" || document.getElementById("finish_date_" + hw_id).value==""){
+                alert("時間不可留空");
+                return false;
+            }
+
+            /*截止日不可早於繳交日*/
+            var start_date = new Date(document.getElementById("start_date_" + hw_id).value);
+            var finish_date = new Date(document.getElementById("finish_date_" + hw_id).value);
+
+            if(start_date>finish_date){
+                alert("截止日不可早於繳交日");
+                return false;
+            ;}
+            $.ajax({
+                url:"ajax_active/homework_active",
+                type: "POST",
+                data: formdata,
+                contentType: false,
+                cache: false,
+                processData: false,
+                success : function(data)
+                {
+                    alert(data["msg"]);
+                    /*收起建立清單*/
+                    $("#hw_edit_" + hw_id).hide("slow");
+                    /*整理清單*/
+                    setTimeout(function(){$("#form_area").load("ajax_show/lesson_edit_page?page=homework&" + row_search_value);},700);
+                },
+                error: function(data)
+                {
+                    alert("系統錯誤，請聯絡系統管理人");
+                }
+            })
+        ;})
+
+        /*作業刪除*/
+        $(".delete_lesson").click(function(event){
+            var hwid = event.target.value;
+            decide = confirm("是否要刪除");
+            if(decide){
+                $.get("/ajax_active/delete_homework",{"homeworkid":hwid}, function(ret){
+                    if(ret.result){
+                        var element_name = "#hw_info_" + hwid;
+                        $(element_name).remove();
+                        var element_name = "#hw_edit_" + hwid;
+                        $(element_name).remove();
+                        alert("已刪除");
+                    }
+                    else{
+                        alert("刪除失敗，請聯絡系統管理員");
+                    }
+                })
+            ;}
+        ;})
+    })
+
+</script>
+
+<style>
+.mark{
+    max-height:30px;
+    width:auto;
+}
+.btn-primary.edit-btn{
+    background-color:#20B2AA;
+    border-color:#20B2AA;
+}
+</style>
+
+<div class="container">
+    <section class="container text-center">
+        <div class="row py-lg-5">
+            <h1>習題管理</h1>
+        </div>
+    </section>
+    <div class="row">
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button type="button" id="newhomework" class="btn btn-primary">新增作業</button>
+        </div>
+    </div>
+    <form id="newhomework_form" style="display:none">
+        <div id="background_value">
+            <input type="hidden" value="{{info.lessonid}}" name="lessonid" id="lessonid">
+        </div>
+        <div class="row" >
+            {%csrf_token%}
+            <div class="col p-1">
+                <label>名稱：</label>
+                <input type="text" class="form-control" id="name" name="name">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col p-1">
+                <label>相關章節：</label>
+                <select class="form-select" name="lessontable_id">
+                    {%for list in lesson_table.iloc%}
+                    <option value="{{list.inner_id}}">{{list.ch}}-{{list.sb}} {{list.title}}</option>
+                    {%endfor%}
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col p-1">
+                <label>有無附檔?：</label>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="attach_false" name="attach" value=False checked>
+                    <label class="form-check-lable" for="attach_false">無</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="attach_true" name="attach" value=True>
+                    <label class="form-check-lable" for="attach_true">有</label>
+                </div>
+                <div id="fileupload" style="display:none">
+                    <input type="file" class="form-control">
+                </div>
+            </div>
+            <div class="col p-1">
+                <label>允許遲交：</label>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input mt-0" id="turn_it_false" name="turn_it" value=False checked>
+                    <label class="form-check-lable" for="turn_it_false">不允許</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input mt-0" id="turn_it_true" name="turn_it" value=True>
+                    <label class="form-check-lable" for="turn_it_true">允許</label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col p-1">
+                <label>開始繳交日期：</label>
+                <input type="date" class="form-control" id="start_date" name="start_date">
+            </div>
+            <div class="col p-1">
+                <label>截止日期：</label>
+                <input type="date" class="form-control" id="finish_date" name="finish_date">
+            </div>
+        </div>
+        <div class="row">
+            <label class="row">說明：</label>
+            <textarea class="form-control" rows="5" style="width:100%;resize:none;"
+                      id="homeworkinfo" name="homeworkinfo"></textarea>
+        </div>
+        <div class="text-center p-1">
+            <div class="btn-group text-center">
+                <button id="build" type="button" class="btn btn-success">建立</button>
+            </div>
+        </div>
+    </form>
+    <div class="row">
+        <table class="table table-hover" id="homework_table">
+            <thead>
+                <tr>
+                    <th>章節</th>
+                    <th>章節標題</th>
+                    <th>作業標題</th>
+                    <th>開始繳交時間</th>
+                    <th>結束繳交時間</th>
+                    <th>可否遲交?</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {%for list in homework_info.all%}
+                <tr id="hw_info_{{list.inner_id}}">
+                    <td>{{list.lessontable_id.ch}}-{{list.lessontable_id.sb}}</td>
+                    <td>{{list.lessontable_id.title}}</td>
+                    <td>{{list.title}}</td>
+                    <td>{{list.start_time}}</td>
+                    <td>{{list.finish_time}}</td>
+                    {%if list.turn_it_available%}
+                    <td><img class="img-responsive mark" src="{% static 'element/check-mark.png'%}"></td>
+                    {%else%}
+                    <td><img class="img-responsive mark" src="{% static 'element/x-mark.png'%}"></td>
+                    {%endif%}
+                    <td><button type="button" class="btn btn-primary edit-btn" value="{{list.inner_id}}">編輯</button></td>
+                </tr>
+                <tr id="hw_edit_{{list.inner_id}}" style="display:none;">
+                    <td colspan="100%">
+                        <div class="container">
+                            <form id="hw_edit_form_{{list.inner_id}}">
+                                {%csrf_token%}
+                                <div id="background_value_{{list.inner_id}}">
+                                    <input type="hidden" value="{{info.lessonid}}" name="lessonid" id="lessonid_{{info.lessonid}}">
+                                    <input type="hidden" value="{{list.inner_id}}" name="homeworkid" id="homeworkid{{list.inner_id}}">
+                                </div>
+                                <div class="row" >
+                                    {%csrf_token%}
+                                    <div class="col p-1">
+                                        <label>名稱：</label>
+                                        <input type="text" class="form-control" id="name_{{list.inner_id}}" name="name" value="{{list.title}}">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col p-1">
+                                        <label>相關章節：</label>
+                                        <select class="form-select" name="lessontable_id">
+                                            {%for lesson in lesson_table.iloc%}
+                                            {%if list.lessontable_id_id == lesson.inner_id%}
+                                            <option value="{{lesson.inner_id}}" selected>{{lesson.ch}}-{{lesson.sb}} {{lesson.title}}</option>
+                                            {%else%}
+                                            <option value="{{lesson.inner_id}}">{{lesson.ch}}-{{lesson.sb}} {{lesson.title}}</option>
+                                            {%endif%}
+                                            {%endfor%}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col p-1">
+                                        <div class="col p-1">
+                                            <label>目前檔案：</label>
+                                            {%if list.attach_file_exist == 1%}
+                                            {%for attach_item in homework_attach.all%}
+                                            {%if attach_item.homeworkid_id == list.inner_id%}
+                                            <a href="{{attach_item.file.url}}">{{attach_item.filename_without_extension}}</a>
+                                            {%endif%}
+                                            {%endfor%}
+                                            {%else%}
+                                            <text>無</text>
+                                            {%endif%}
+                                        </div>
+                                        <div class="col p-1">
+                                            <label>準備上傳檔案或動作：</label>
+                                            <font id="preupload_filename_{{list.inner_id}}">(無)</font>
+                                        </div>
+                                        <div class="col p-1">
+                                            <input type="hidden" class="form-check-input" id="attach_TorF_{{list.inner_id}}" name="attach"
+                                                   value={%if list.attach_file_exist == 1%}True{%else%}False{%endif%}>
+                                            <div class="btn-group">
+                                                <label class="btn btn-primary">
+                                                    <text>新增/更換</text>
+                                                    <input name="attach_file" id="attach_file_{{list.inner_id}}" style="display:none;" type="file" data-inner-id="{{list.inner_id}}">
+                                                </label>
+                                                <button type="button" class="btn btn-danger remove_attach" data-inner-id="{{list.inner_id}}">移除</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col p-1">
+                                        <label>允許遲交：</label>
+                                        <div class="form-check">
+                                            <input type="radio" class="form-check-input mt-0" id="turn_it_false_{{list.inner_id}}" name="turn_it" value=False
+                                            {%if list.turn_it_available == 0%}checked{%endif%}>
+                                            <label class="form-check-lable" for="turn_it_false">不允許</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="radio" class="form-check-input mt-0" id="turn_it_true_{{list.inner_id}}" name="turn_it" value=True
+                                            {%if list.turn_it_available == 1%}checked{%endif%}>
+                                            <label class="form-check-lable" for="turn_it_true">允許</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col p-1">
+                                        <label>開始繳交日期：</label>
+                                        <input type="date" class="form-control" id="start_date_{{list.inner_id}}" name="start_date"
+                                               value="{{list.start_time.year|stringformat:'04d'}}-{{list.start_time.month|stringformat:'02d'}}-{{list.start_time.day|stringformat:'02d'}}">
+                                    </div>
+                                    <div class="col p-1">
+                                        <label>截止日期：</label>
+                                        <input type="date" class="form-control" id="finish_date_{{list.inner_id}}" name="finish_date"
+                                        value="{{list.finish_time.year|stringformat:'04d'}}-{{list.finish_time.month|stringformat:'02d'}}-{{list.finish_time.day|stringformat:'02d'}}">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="row">說明：</label>
+                                    <textarea class="form-control" rows="5" style="width:100%;resize:none;"
+                                              id="homeworkinfo_{{list.inner_id}}" name="homeworkinfo">{{list.homeworkinfo}}</textarea>
+                                </div>
+                                <div class="text-center p-1">
+                                    <div class="btn-group text-center">
+                                        <button id="edit" type="button" class="btn btn-success edit_send" value="{{list.inner_id}}">修改</button>
+                                        <button id="delete" type="button" class="btn btn-danger delete_lesson" value="{{list.inner_id}}">刪除</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {%endfor%}
+            </tbody>
+        </table>
+
+    </div>
+</div>

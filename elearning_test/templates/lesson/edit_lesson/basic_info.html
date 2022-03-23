@@ -1,0 +1,306 @@
+{%load static%}
+<script>
+    $(document).ready(function(){
+        $("#entity_radio,#both_radio").click(function(){
+            var element ="<label>地址：</label>\n<input type='text' class='form-control' name='address' id='address_input' value='{{info.address}}'>";
+            $("#address").html(element);
+            $("#address").show("slow");
+        })
+        $("#online_radio").click(function(){
+            $("#address").hide("slow");
+            $("#address").empty();
+        })
+        $("#save").click(function(even){
+            /*檢查*/
+            var lesson_name = document.getElementById("lessoname").value;
+            var start_time = document.getElementById("start_time").value;
+            var finish_time = document.getElementById("finish_time").value;
+            const s_time = new Date(start_time);
+            const f_time = new Date(finish_time);
+            /*空白檢查*/
+            if (lesson_name == ""){
+                alert("課程名稱不可為空白");
+                return false;
+            }
+            else if(start_time == ""){
+                alert("上課日不可為空白");
+                return false;
+            }
+            else if(finish_time == ""){
+                alert("結束日不可為空白");
+                return false;
+            }
+
+            /*邏輯檢查*/
+            if(s_time>f_time){
+                alert("結束日不可早於上課日");
+                return false;
+            }
+            /* 繼續傳遞 */
+            even.preventDefault();
+            var form = $("#form")[0];
+            var formdata = new FormData(form);
+            $.ajax({
+                url:"/ajax_active/lesson_edit_save",
+                type: "POST",
+                data: formdata,
+                contentType: false,
+                cache: false,
+                processData: false,
+                success : function(data)
+                {
+                    alert(data["msg"]);
+                },
+                error: function(data)
+                {
+                    alert(data["msg"]);
+                }
+            })
+        })
+        $("#cancel").click(function(even){
+            window.location.href = "/edit_lesson_list";
+        })
+    })
+
+    var preview_img = function(event){
+        /*嘗試全部讀取元素*/
+        var output = document.getElementById("preview");
+        var nocoverimage = document.getElementById("nocoverimage");
+
+        /*既有封面更換*/
+        if (output != null && event.target.files[0]){
+            request_remove_cover(false);
+            output.src = URL.createObjectURL(event.target.files[0]);
+            output.onload = function(){
+                URL.revokeObjectURL(output.src)
+            }
+        }
+        /*新增封面*/
+        else if(output == null && nocoverimage != null){
+            request_remove_cover(false);
+            /*預先建立img元素*/
+            var img_element = document.createElement("img");
+            img_element.setAttribute("id", "preview");
+            img_element.setAttribute("class", "img-fluid cover-image");
+            img_element.setAttribute("src", URL.createObjectURL(event.target.files[0]));
+
+            nocoverimage.parentNode.replaceChild(img_element, nocoverimage);
+
+            /*show*/
+            img_element.onload = function(){
+                URL.revokeObjectURL(img_element.src)
+            }
+
+        }
+        /*放棄上傳封面*/
+        else{
+            request_remove_cover(false);
+            /*預先建立外框元素*/
+            var nocoverinage_ele = document.createElement("div");
+            nocoverinage_ele.setAttribute("class", "nocover-image");
+            nocoverinage_ele.setAttribute("id", "nocoverimage");
+
+            /*預先建立文字元素*/
+            var text_ele = document.createElement("div");
+            text_ele.setAttribute("style", "color:#FFF;position:relative;top:50%")
+            text_ele.innerHTML = "放棄更新/上傳封面";
+
+            /*組合元素*/
+            nocoverinage_ele.appendChild(text_ele);
+
+            /*取代*/
+            output.parentNode.replaceChild(nocoverinage_ele, output);
+
+        };
+    }
+
+    function request_remove_cover(remove){
+        var remove_cover = document.getElementById("remove_cover");
+        var output = document.getElementById("preview");
+        if (remove == true && output != null){
+            remove_cover.value = "True";
+            /*預先建立外框元素*/
+            var nocoverinage_ele = document.createElement("div");
+            nocoverinage_ele.setAttribute("class", "nocover-image");
+            nocoverinage_ele.setAttribute("id", "nocoverimage");
+
+            /*預先建立文字元素*/
+            var text_ele = document.createElement("div");
+            text_ele.setAttribute("style", "color:#FFF;position:relative;top:50%")
+            text_ele.innerHTML = "移除封面";
+
+            /*組合元素*/
+            nocoverinage_ele.appendChild(text_ele);
+
+            /*取代*/
+            output.parentNode.replaceChild(nocoverinage_ele, output);
+
+        }
+        else{
+            remove_cover.value = "False";
+        }
+    }
+
+</script>
+
+
+<style>
+textarea{
+resize:none;
+}
+
+.cover-image{
+    max-height:200px;
+    margin:10px;
+    width:auto;
+}
+
+.nocover-image{
+    width:300px;
+    height:200px;
+    margin:10px;
+    background-color:#4C5663;
+}
+
+</style>
+
+
+<div class="container">
+    <section class="text-center container">
+        <div class="row py-lg-5">
+            <center><h1>基本資料</h1></center>
+        </div>
+    </section>
+    <form id="form">
+        {%csrf_token%}
+        <div id="hidden_data">
+            <input type="hidden" id="lessonid" name="lessonid" value="{{info.lessonid}}">
+        </div>
+        <div class="container">
+            <div class="row p-1">
+                <div class="col px-3">
+                    <div class="row p-1">
+                        <label>課程名稱：</label>
+                        <input type="text" class="form-control" name="lessoname" id="lessoname" value="{{info.name}}">
+                    </div>
+                    <div class="row p-1">
+                        <label>課程種類：</label>
+                        <input type="text" class="form-control" name="lessontype" id="lessontype" value="{{info.lessontype}}">
+                    </div>
+                </div>
+                <div class="col px-3">
+                    <div class="row p-1">
+                        <label>封面：</label>
+                        <center>
+                            {%if cover.shape.0 > 0%}
+                            <img id="preview" class="img-fluid cover-image" src="fileinfo/{{cover.iloc.0.image}}">
+                            {%else%}
+                            <div id="nocoverimage" class="nocover-image">
+                                <div style="color:#FFF;position:relative;top:50%">未上傳封面</div>
+                            </div>
+                            {%endif%}
+                        </center>
+                        <label>修改封面：</label>
+                        <div class="col p-1">
+                            <input name="cover" type="file" class="form-control" accept="image/*"
+                                   onchange="preview_img(event)">
+                        </div>
+                        <div class="col col-3 p-1">
+                            <input id="remove_cover" name="remove_cover" type="hidden" value=False>
+                            <button type="button" class="btn btn-primary" onclick="request_remove_cover(true)">移除封面</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row p-1">
+                <div class="col">
+                    <label>授課模式：</label>
+                    <div class="form-check">
+                        <input id="online_radio" class="form-check-input mt-0" type="radio" value="online" name="lesson_mode" required
+                               {%if info.situation == "online"%}
+                                checked
+                               {%endif%}>
+                        <label>線上課程</label>
+                    </div>
+                    <div class="form-check">
+                        <input id="entity_radio" class="form-check-input mt-0" type="radio" value="entity" name="lesson_mode" required
+                               {%if info.situation == "entity"%}
+                                checked
+                               {%endif%}>
+                        <label>實體課程</label>
+                    </div>
+                    <div class="form-check">
+                        <input id="both_radio" class="form-check-input mt-0" type="radio" value="both" name="lesson_mode" required
+                               {%if info.situation == "both"%}
+                                checked
+                               {%endif%}>
+                        <label>線上、實體並行</label>
+                    </div>
+                </div>
+                <div class="col">
+                    <label>參加身分審核：</label>
+                    <div class="form-check">
+                        <input class="form-check-input mt-0" type="radio" value="False" name="verify" required
+                        {%if info.verify is False%}
+                            checked
+                        {%endif%}>
+                        <label>自由開放</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input mt-0" type="radio" value="True" name="verify" required
+                        {%if info.verify%}
+                            checked
+                        {%endif%}>
+                        <label>審核</label>
+                    </div>
+                </div>
+                <div class="col">
+                    <label>授課證書與否：</label>
+                <div class="form-check">
+                    <input class="form-check-input mt-0" type="radio" value="True" name="sing_licnese" required
+                        {%if info.certificate %}
+                            checked
+                        {%endif%}>
+                        <label>是</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input mt-0" type="radio" value="False" name="sing_licnese" required
+                        {%if info.certificate is False%}
+                            checked
+                        {%endif%}>
+                        <label>否</label>
+                    </div>
+                </div>
+            </div>
+            <div class="row p-1" id="address"
+                {%if info.situation == "online"%}
+                 style="display:none"
+                {%endif%}>
+                {%if info.situation != "online"%}
+                <label>地址：</label>
+                <input type='text' class='form-control' name='address' id='address_input' value='{{info.address}}'>
+                {%endif%}
+            </div>
+            <div class="row p-1">
+                <label>上課日：</label>
+                <input type="date" class="form-control" name="start_time" id="start_time"
+                       value="{{info.start_time.year|stringformat:'04d'}}-{{info.start_time.month|stringformat:'02d'}}-{{info.start_time.day|stringformat:'02d'}}">
+            </div>
+            <div class="row p-1">
+                <label>結束日：</label>
+                <input type="date" class="form-control" name="finish_time" id="finish_time"
+                       value="{{info.finish_time.year|stringformat:'04d'}}-{{info.finish_time.month|stringformat:'02d'}}-{{info.finish_time.day|stringformat:'02d'}}">
+            </div>
+
+            <div class="row p-1">
+                <label>說明：</label>
+                <textarea class="container" rows="5" name="lessoninfo">{{info.lessoninfo}}</textarea>
+            </div>
+        <center>
+            <button id="save" type="submit" class="btn btn-success">儲存</button>
+            <button id="cancel" type="button" class="btn btn-danger">取消</button>
+        </center>
+    </form>
+</div>

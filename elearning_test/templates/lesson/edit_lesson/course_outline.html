@@ -1,0 +1,245 @@
+<script>
+    var count = {{lesson_id_count}};
+    var lesson_count = {{lesson_count}};
+
+    function del(eleid){
+    var tab = document.getElementById(eleid);
+    tab.remove();
+    lesson_count -= 1;
+
+    /* 輸入隱藏變數 */
+    var hidden = document.getElementById('lesson_count');
+    hidden.value = lesson_count.toString();
+    };
+
+    function deltextbook(eleid){
+        var target = document.getElementById(eleid);
+        target.remove();
+    };
+
+    function change_textbooktype(eleid){
+        var target = document.getElementById(eleid);
+        var file_upload = "<input class='form-control' type='file' name='"+ eleid +"'>";
+        var external_source ="<textarea class='form-control' name='"+ eleid +"'></textarea>";
+        console.log(target.innerHTML);
+        console.log(file_upload);
+        if(target.innerHTML.includes("<input")){
+            target.innerHTML = external_source;
+        ;}
+        else{
+            target.innerHTML = file_upload;
+        ;}
+    };
+
+    $(document).ready(function(){
+        /* 基本資料區 */
+        var row_search_value = window.location.search.substring(1);
+
+        $(".detail_button").click(function(even){
+            var target_id = even.target.value;
+            if($("#" + target_id).css("display")=="none"){
+                $("#" + target_id).show("slow");
+                even.target.innerHTML = "收回";
+            }
+            else{
+                $("#" + target_id).hide("slow");
+                even.target.innerHTML = "詳細";
+            }
+        ;})
+
+        $("#addrow").click(function(){
+            /* 計數器 */
+            count += 1;
+            lesson_count += 1;
+            var item = count.toString();
+
+            /* 刪除指令建立 */
+            var del_order= "del('L" + item + "')";
+
+            var row = $("\
+            <tr id='L"+item+"'>\
+            <td><input type='number' name='ch"+item+"' min='0'></td>\
+            <td><input type='number' name='sb"+item+"' min='0'></td>\
+            <td><input type='text' name='title"+item+"' style='width: 100%;'></td>\
+            <td><button type='button' class='btn btn-danger' onclick="+ del_order +">刪除</button></td>\
+            </tr>\
+            ");
+
+            $("#lesson_table > tbody").append(row);
+
+            /* 輸入隱藏變數 */
+            var hidden = document.getElementById('lesson_count');
+            hidden.value = lesson_count.toString();
+            var hidden = document.getElementById('lesson_id_count');
+            hidden.value = count.toString();
+        });
+
+        $("#save").click(function(even){
+            /* 繼續傳遞 */
+            even.preventDefault();
+            var form = $("#form")[0];
+            var formdata = new FormData(form);
+            $.ajax({
+                url:"/ajax_active/course_outline_edit_save",
+                type: "POST",
+                data: formdata,
+                contentType: false,
+                cache: false,
+                processData: false,
+                success : function(data)
+                {
+                    alert(data["msg"]);
+                    refresh();
+                },
+                error: function(data)
+                {
+                    alert("系統錯誤，請稍後再試");
+                }
+            })
+        });
+
+        $(".add_textbook").click(function(even){
+            var target_id="#textbook_list_" + even.target.value;
+            var lesson_table_inner_id = even.target.dataset.lessonTableId;
+
+            /* 佔編id產生 */
+            var randomid = Math.floor(Math.random()*1001);
+
+            /* 各類與id相關指令*/
+            var tempid = "new_" + randomid;
+            var delete_order = "deltextbook('"+ tempid +"')";
+            var textbook_name = "newtextbook_" + randomid;
+            var changetype = "change_textbooktype('"+ textbook_name +"')";
+            var textbook_ = textbook_name + "_lesson_table_id";
+
+            var input_element = "\
+            <div class='row p-1' id='"+ tempid +"'>\
+            <div class='col' id='"+ textbook_name +"'><input class='form-control' type='file' name='"+ textbook_name +"'></div>\n\
+            <div class='col'><button type='button' class='btn btn-warning' onclick="+ delete_order +">放棄新增</button>\
+            <button type='button' class='btn btn-primary change-btn' onclick="+ changetype +">更換教材種類</button></div>\
+            <div class='col' style='display:none'><input class='form-control' type='number' value="+lesson_table_inner_id+" name='"+ textbook_ +"'></div>\
+            </div>";
+            $(target_id).append(input_element);
+        ;})
+
+        $(".remove_file").click(function(even){
+            var target = even.target.value;
+            /*修改刪除指令數值*/
+            var remove_order = document.getElementById("remove_" + target);
+            remove_order.value = 1;
+            /*隱藏檔案列*/
+            $("#textbook_" + target).hide("slow");
+
+        ;})
+
+        $("#cancel").click(function(even){
+            window.location.href="edit_lesson_list";
+        });
+
+        /*整理清單*/
+        function refresh(){
+            setTimeout(
+                function(){$("#form_area").load("ajax_show/lesson_edit_page?page=class_list&" + row_search_value)
+            ;},700)
+        ;}
+    })
+
+
+</script>
+
+<style>
+textarea{
+resize:none;
+}
+.btn-primary.change-btn{
+    background-color:#20B2AA;
+    border-color:#20B2AA;
+}
+</style>
+
+<div class="container">
+    <section class="text-center container">
+        <div class="row py-lg-5">
+            <h1>課綱資料</h1>
+        </div>
+    </section>
+    <form id="form">
+        {%csrf_token%}
+        <div id="background_value">
+            <input type="hidden" value="{{lesson_count}}" name="lesson_count" id="lesson_count">
+            <input type="hidden" value="{{lesson_id_count}}" name="lesson_id_count" id="lesson_id_count">
+            <input type="hidden" value="{{info.lessonid}}" name="lessonid" id="lessonid">
+        </div>
+        <div class="row p-1">
+            <div class="col">
+                <table class="table table-hover" id="lesson_table">
+                    <thead>
+                        <tr>
+                            <th scope="col" width="10%">章</th>
+                            <th scope="col" width="10%">節</th>
+                            <th scope="col" width="60%">標題</th>
+                            <th scope="col" width="10%">詳細操作</th>
+                            <th scope="col" width="10%">刪除</th>
+                        </tr>
+                    </thead>
+                    <tbody id="class_list">
+                        {%for list in lesson_table.iloc%}
+                        <tr id="L_{{forloop.counter0}}">
+                            <input type="hidden" name="inner{{forloop.counter0}}" min="0" value="{{list.inner_id}}">
+                            <td><input class="form-control" type="number" name="ch{{forloop.counter0}}" min="0" value="{{list.ch}}"></td>
+                            <td><input class="form-control" type="number" name="sb{{forloop.counter0}}" min="0" value="{{list.sb}}"></td>
+                            <td><input class="form-control" type="text" name="title{{forloop.counter0}}" style="width: 100%;" value="{{list.title}}"></td>
+                            <td><button type="button" class="btn btn-primary detail_button" value="det_{{forloop.counter0}}">詳細</button></td>
+                            {% if lesson_table.shape.0 == 1%}
+                            <td></td>
+                            {% else %}
+                            <td><button type='button' class='btn btn-danger'
+                                        onclick="del('L_{{forloop.counter0}}');del('det_{{forloop.counter0}}')">刪除</button></td>
+                            {%endif%}
+                        </tr>
+                        <tr id="det_{{forloop.counter0}}" style="display:none">
+                            <td colspan="100%">
+                                <div class="row p-1">
+                                    <div class="col">
+                                        <h5>教材：</h5>
+                                    </div>
+                                    <div class="col text-end">
+                                        <button type="button" class="btn btn-sm btn-primary add_textbook" data-lesson-table-id="{{list.inner_id}}"
+                                                id="add_textbook_{{forloop.counter0}}" value="{{forloop.counter0}}">增加教材</button>
+                                    </div>
+                                </div>
+                                <div class="row p-1" id="textbook_list_{{forloop.counter0}}">
+                                    {%for file in media_info%}
+                                    {%if list.inner_id == file.t_id_id%}
+                                    <div class="row p-1" id="textbook_{{file.media_id_id}}">
+                                        <div class="col" id="filename">
+                                            <a href="{{file.media_id.file.url}}">{{file.media_id.filename}}</a>
+                                        </div>
+                                        <div class="col">
+                                            <button type="button" class="btn btn-danger remove_file" value="{{file.media_id_id}}">刪除教材</button>
+                                        </div>
+                                        <input type='hidden' name='remove_{{file.media_id_id}}' id='remove_{{file.media_id_id}}' value=0>
+                                    </div>
+                                    {%endif%}
+                                    {%endfor%}
+                                </div>
+                            </td>
+                        </tr>
+                        {%endfor%}
+                    </tbody>
+                </table>
+            </div>
+        <div class="row p-1">
+            <center>
+                <button id="addrow" type="button" class="btn btn-primary">新增章節</button>
+            </center>
+        </div>
+        <div class="row p-1">
+            <center>
+                <button id="save" type="submit" class="btn btn-success">儲存</button>
+                <button id="cancel" type="button" class="btn btn-danger">取消</button>
+            </center>
+        </div>
+    </div>
+    </form>
+</div>

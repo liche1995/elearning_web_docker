@@ -1,0 +1,44 @@
+{% extends 'MasterPage.html'%}
+{%load static%}
+
+{%block addition_style%}
+.cover-image{
+    max-height:200px;
+    max-width:300px;
+}
+.lessoninfo{
+    min-height:200px;
+}
+{%endblock%}
+
+{%block content%}
+<section class="py-5 text-center container">
+    <div class="row py-lg-5">
+        <center><h1>課程資訊</h1></center>
+    </div>
+</section>
+<div class="container d-grid bd-placeholder-img gap-3">
+    {% for list in result_table.all %}
+    <div class="row bg-light bg-gradient lessoninfo">
+        <div class="col-5">
+            <center>
+                {%for cover_item in cover.all%}
+                    {%if cover_item.lesson_id_id == list.lessonid%}
+                    <img class="img-responsive cover-image" src="fileinfo/{{cover_item.image}}">
+                    {%endif%}
+                {%endfor%}
+            </center>
+        </div>
+        <div class="col p-3">
+            <h3>{{list.name}}</h3>
+            <p>{{list.lessoninfo}}</p>
+            <p>{{list.start_time}}</p>
+            <p align="right"><a type="button" class="btn btn-primary" href="lesson_info?lessonid={{list.lessonid}}">Info</a></p>
+        </div>
+    </div>
+    {% endfor %}
+    <p style="text-align:right">
+        <a href="/lesson?more=1">更多...</a>
+    </p>
+</div>
+{%endblock%}
