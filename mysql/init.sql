@@ -15,5 +15,5 @@ CREATE USER IF NOT EXISTS 'sailor_spam'@'localhost' IDENTIFIED WITH mysql_native
 CREATE USER IF NOT EXISTS 'sailor_spam'@'%' IDENTIFIED WITH mysql_native_password BY 'direction000yosoro'; 
 
 -- 給予權限
-GRANT SELECT, INSERT, UPDATE ON django_web_db.* TO 'sailor_spam'@'localhost';
-GRANT SELECT, INSERT, UPDATE ON django_web_db.* TO 'sailor_spam'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON django_web_db.* TO 'sailor_spam'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE ON django_web_db.* TO 'sailor_spam'@'%';

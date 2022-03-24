@@ -26,5 +26,5 @@ ADD modlist.txt /webcode/
 RUN pip install -r modlist.txt
 
 # 複製當下資料夾所有資料到工作目錄
-#ADD . /webcode/
+ADD . /webcode/
 

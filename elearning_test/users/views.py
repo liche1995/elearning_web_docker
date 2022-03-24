@@ -114,8 +114,8 @@ def create_user_form(request):
     context["region"] = region
 
     # 抓取使用條款文本
-    privacy_clause_path = os.getcwd() + "\\templates\\staticfiles\\clause\\privacy_clause.txt"
-    data = open(privacy_clause_path, "r")
+    privacy_clause_path = os.getcwd() + "/templates/staticfiles/clause/privacy_clause.txt"
+    data = open(privacy_clause_path, "r", encoding="big5")
     context["privacy_clause"] = data.read()
     data.close()
     return render(request, "account/sign_up.html", context)
