@@ -15,7 +15,8 @@ RUN apt update
 RUN apt install wait-for-it
 
 # 預備Apache
-# RUN apt install -y apache2-dev
+RUN apt install -y apache2-dev
+RUN apt install -y apache2
 
 # 更新pip
 RUN pip install pip -U
