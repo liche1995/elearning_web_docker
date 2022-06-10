@@ -10,6 +10,12 @@ RUN mkdir /webcode
 # 設定工作目錄
 WORKDIR /webcode
 
+# 複製當下資料夾所有資料到工作目錄
+COPY . /webcode/
+
+# 複製模組清單檔案到工作目錄
+#COPY modlist.txt /webcode/ 
+
 # 預備linux常用包
 RUN apt update
 RUN apt install wait-for-it
@@ -17,16 +23,10 @@ RUN apt install wait-for-it
 # 預備Apache
 RUN apt install -y apache2
 RUN apt install -y apache2-dev
-RUN apt install libapache2-mod-wsgi-py3
+RUN apt install -y libapache2-mod-wsgi-py3
 
 # 更新pip
 RUN pip install pip -U
-# 複製模組清單檔案到工作目錄
-ADD modlist.txt /webcode/
 
 # 安裝所需模組
 RUN pip install -r modlist.txt
-
-# 複製當下資料夾所有資料到工作目錄
-ADD . /webcode/
-

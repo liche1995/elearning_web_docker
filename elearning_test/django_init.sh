@@ -14,4 +14,10 @@ echo "initialization web user auth"
 python manage.py shell <auth_init.py
 
 # excute server
-python manage.py runserver 0.0.0.0:8000
+#python manage.py runserver 0.0.0.0:8000
+
+# setting server property file
+mv server_setting.conf /etc/apache2/site-available
+a2ensite server_setting.conf
+a2dissite 000-default.conf
+service service apache2 reload
