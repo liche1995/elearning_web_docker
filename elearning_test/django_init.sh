@@ -13,11 +13,14 @@ python manage.py migrate --database=db_manage
 echo "initialization web user auth"
 python manage.py shell <auth_init.py
 
-# excute server
-#python manage.py runserver 0.0.0.0:8000
-
 # setting server property file
-mv server_setting.conf /etc/apache2/site-available
-a2ensite server_setting.conf
+cp server_setting.conf /etc/apache2/sites-available
+echo "ServerName localhost" >> /etc/apache2/apache2.conf
+echo "copy server_setting.conf"
 a2dissite 000-default.conf
-service service apache2 reload
+a2ensite server_setting.conf
+service apache2 start
+
+# excute server
+# python manage.py runserver 0.0.0.0:8000
+
