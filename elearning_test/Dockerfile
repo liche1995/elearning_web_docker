@@ -3,6 +3,8 @@ FROM python:3.8.2
 
 # python環境變數
 ENV PYTHONUNBUFFERED 1
+ENV PYTHONIOENCODING=utf-8
+#RUN type export PYTHONPATH=/usr/local/bin/python3.8
 
 # 初始化指令
 # 建立資料夾
@@ -13,8 +15,6 @@ WORKDIR /webcode
 # 複製當下資料夾所有資料到工作目錄
 COPY . /webcode/
 
-# 複製模組清單檔案到工作目錄
-#COPY modlist.txt /webcode/ 
 
 # 預備linux常用包
 RUN apt update
