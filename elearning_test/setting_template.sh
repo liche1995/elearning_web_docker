@@ -1,15 +1,10 @@
 #!/bin/sh
-config1=$1
-config2=$2
-config3=$3
-config4=$4
-config5=$5
+out=$(mod_wsgi-express module-config)
 
-cat << EOF
+cat<< EOF /usr/local/apache2/conf/httpd.conf -> httpd.conf
 #WSGI setting
-$config1 $config2 $config3
-$config4 $config5n/
-WSGIPythonPath "/webcode" 
+$out
+WSGIPythonPath "/webcode"
 
 WSGIScriptAlias / /webcode/elearning_test/wsgi.py application-group=%{GLOBAL}
 
@@ -28,6 +23,8 @@ Alias /static /webcode/templates/staticfiles
 
 Alias /fileinfo /webcode/fileinfo
 <Directory /webcode/fileinfo>
-    Require all granted  
+    Require all granted
 </Directory>
 EOF
+
+mv -f httpd.conf /usr/local/apache2/conf

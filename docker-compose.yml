@@ -18,8 +18,10 @@ services:
   # 使用連接阜設定
   ports:
    - "8000:80"
-  #depends_on:
-  #  - mysql_server
+  depends_on:
+    - mysql_server
+  environment:
+   TZ: Asia/Taipei
  
  # mysql
  mysql_server:

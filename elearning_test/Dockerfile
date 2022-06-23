@@ -18,11 +18,6 @@ RUN ln /usr/bin/python3 /usr/bin/python
 RUN apt install -y python3-pip
 RUN ln -f /usr/bin/pip3 /usr/bin/pip
 
-# python環境變數
-#ENV PYTHONUNBUFFERED 1
-#ENV PYTHONIOENCODING=utf-8
-#RUN type export PYTHONPATH=/usr/local/bin/python3.8
-
 # 初始化指令
 # 建立資料夾
 RUN mkdir /webcode
@@ -36,8 +31,5 @@ COPY . /webcode/
 RUN pip install -r modlist.txt
 
 
-# 設定檔移動
-# COPY server_setting.conf /etc/apache2/sites-available
-# RUN a2dissite 000-default.conf
-# RUN a2ensite server_setting.conf
-# RUN service apache2 start
+# setting server property file
+RUN ./setting_template.sh
