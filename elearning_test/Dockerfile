@@ -1,5 +1,16 @@
-# 設定並獲取python 3.8.2
-FROM python:3.8.2
+# 設定並獲取nginx
+FROM nginx
+
+# 預備常用包
+RUN apt update
+RUN apt install wait-for-it
+RUN apt install -y vim
+
+# 預備python
+RUN apt install -y python3
+RUN ln /usr/bin/python3 /usr/bin/python
+RUN apt install -y python3-pip
+RUN ln -f /usr/bin/pip3 /usr/bin/pip
 
 # python環境變數
 ENV PYTHONUNBUFFERED 1
@@ -10,21 +21,12 @@ RUN mkdir /webcode
 # 設定工作目錄
 WORKDIR /webcode
 
-# 預備linux常用包
-RUN apt update
-RUN apt install wait-for-it
-
-# 預備Apache
-# RUN apt install -y apache2-dev
-
-# 更新pip
-RUN pip install pip -U
-# 複製模組清單檔案到工作目錄
-ADD modlist.txt /webcode/
+# 複製當下資料夾所有資料到工作目錄
+COPY . /webcode/
 
 # 安裝所需模組
 RUN pip install -r modlist.txt
+RUN pip install uwsgi
 
-# 複製當下資料夾所有資料到工作目錄
-ADD . /webcode/
+
 

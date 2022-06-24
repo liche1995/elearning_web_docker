@@ -9,27 +9,31 @@ services:
   # 建置設定
   build: ./elearning_test
   # 啟動指令
-  command: ["wait-for-it", "mysql_server:33061", "-t", "30", "--", "bash", "django_init.sh" ]
+  #command: ["wait-for-it", "mysql_server:33061", "-t", "30", "--", "bash", "django_init.sh" ]
+  command: ["./django_init.sh"]
   # 掛載檔案儲存空間
   volumes: 
    # 映射elearning_test下所有資料至docker下的 webcode資料夾
    - ./elearning_test:/webcode
   # 使用連接阜設定
+  environment:
+   - NGINX_HOST=foobar.com
+   - NGINX_PORT=8000
   ports:
    - "8000:8000"
   depends_on:
     - mysql_server
  
  # mysql
- mysql_server:
-  container_name: mysql_server_elearning
-  image: mysql
-  restart: always
-  environment:
-   MYSQL_ROOT_PASSWORD: tt123
-   MYSQL_TCP_PORT: 33061
-   TZ: Asia/Taipei
-  volumes:
-   - ./mysql:/docker-entrypoint-initdb.d
-  ports:
-   - "33061:33061"
+# mysql_server:
+#  container_name: mysql_server_elearning
+#  image: mysql
+#  restart: always
+#  environment:
+#   MYSQL_ROOT_PASSWORD: tt123
+#   MYSQL_TCP_PORT: 33061
+#   TZ: Asia/Taipei
+#  volumes:
+#   - ./mysql:/docker-entrypoint-initdb.d
+#  ports:
+#   - "33061:33061"
