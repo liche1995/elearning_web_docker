@@ -1,39 +1,50 @@
 version: "3"
 services:
- # 網站系統
- web:
-  # 名稱
-  container_name: django_elearning_root
-  # 重啟政策
+ nginx_server:
+  container_name: nginx_server
   restart: always
-  # 建置設定
+  build: ./nginx_conf
+  volumes: 
+   - ./elearning_test:/webcode
+  ports:
+   - "8000:80"
+  links: 
+   - django_sevice
+  depends_on: 
+   - django_sevice
+  environment:
+   TZ: Asia/Taipei
+ 
+ 
+ django_sevice:
+  container_name: django_elearning_root
   build: ./elearning_test
-  # 啟動指令
-  #command: ["wait-for-it", "mysql_server:33061", "-t", "30", "--", "bash", "django_init.sh" ]
-  command: ["./django_init.sh"]
-  # 掛載檔案儲存空間
+  restart: always
+  depends_on: 
+   - mysql_server_elearning
+  expose:
+   - "8001"
   volumes: 
    # 映射elearning_test下所有資料至docker下的 webcode資料夾
    - ./elearning_test:/webcode
-  # 使用連接阜設定
   environment:
-   - NGINX_HOST=foobar.com
-   - NGINX_PORT=8000
-  ports:
-   - "8000:8000"
-  depends_on:
-    - mysql_server
+   -TZ: Asia/Taipei
+  tty: true
+
  
  # mysql
-# mysql_server:
-#  container_name: mysql_server_elearning
-#  image: mysql
-#  restart: always
-#  environment:
-#   MYSQL_ROOT_PASSWORD: tt123
-#   MYSQL_TCP_PORT: 33061
-#   TZ: Asia/Taipei
-#  volumes:
-#   - ./mysql:/docker-entrypoint-initdb.d
-#  ports:
-#   - "33061:33061"
+ mysql_server:
+  container_name: mysql_server_elearning
+  image: mysql
+  restart: always
+  environment:
+   MYSQL_ROOT_PASSWORD: tt123
+   MYSQL_TCP_PORT: 33061
+   TZ: Asia/Taipei
+  volumes:
+   - ./mysql:/docker-entrypoint-initdb.d
+  ports:
+   - "33061:33061"
+
+
+   #https://zhuanlan.zhihu.com/p/145364353
