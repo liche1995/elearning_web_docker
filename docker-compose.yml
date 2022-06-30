@@ -8,6 +8,8 @@ services:
    - ./elearning_test:/webcode
   ports:
    - "8000:80"
+  expose:
+   - "8000"
   links: 
    - django_sevice
   depends_on: 
