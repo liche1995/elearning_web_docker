@@ -21,3 +21,4 @@ COPY . /webcode/
 # 安裝所需模組
 RUN pip install -r modlist.txt
 RUN pip install uwsgi
+CMD ["wait-for-it", "mysql_server:33061", "-t", "30", "--", "bash", "django_init.sh"]

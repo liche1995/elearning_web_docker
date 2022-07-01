@@ -14,3 +14,5 @@ echo "initialization web user auth"
 python manage.py shell <auth_init.py
 
 uwsgi --ini /webcode/uwsgi.ini
+# start up python compiler to keep conatiner active
+python
