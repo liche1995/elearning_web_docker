@@ -23,7 +23,7 @@ services:
   build: ./elearning_test
   restart: always
   depends_on: 
-   - mysql_server_elearning
+   - mysql_server
   expose:
    - "8001"
   volumes: 
